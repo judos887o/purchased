@@ -53,7 +53,6 @@ local items = {
     {name = "[Tactical Shotgun]", display = "Tactical Shotgun", color = Color3.fromRGB(255, 50, 50)},
     {name = "[Silencer]", display = "Silencer", color = Color3.fromRGB(255, 50, 50)},
     {name = "[USP]", display = "USP", color = Color3.fromRGB(255, 50, 50)},
-    {name = "[Bloxy Cola]", display = "Bloxy Cola", color = Color3.fromRGB(50, 255, 100)},
     {name = "[Pizza]", display = "Pizza", color = Color3.fromRGB(50, 255, 100)},
     {name = "[Medium Armor]", display = "Medium Armor", color = Color3.fromRGB(100, 150, 255)},
 }
@@ -85,8 +84,8 @@ gui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = scaleUDim(250, 310)
-MainFrame.Position = UDim2.new(1, -(250 * SCALE), 0.5, -(410 * SCALE))
+MainFrame.Size = scaleUDim(250, 270)
+MainFrame.Position = UDim2.new(1, -(260 * SCALE), 1, -(590 * SCALE))
 MainFrame.BackgroundColor3 = Theme.Background
 MainFrame.BackgroundTransparency = 0.02
 MainFrame.BorderSizePixel = 0
@@ -308,7 +307,7 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 
 MainFrame.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = scaleUDim(250, 310)}):Play()
+TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = scaleUDim(250, 270)}):Play()
 
 local cleanupListener = RunService.RenderStepped:Connect(function()
     if not Shared.PurchasePanel then
