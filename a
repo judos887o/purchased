@@ -1,0 +1,325 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+
+local lp = Players.LocalPlayer
+local Shared = getgenv().SchmecktHubPC or {}
+local key = "PurchasePanel"
+
+local SCALE = 1
+if Shared.Platform == "Mobile" then
+    SCALE = 1 / 2.2
+end
+
+local function scaleUDim(x, y)
+    return UDim2.new(0, x * SCALE, 0, y * SCALE)
+end
+
+local function scaleSize(s)
+    return math.floor(s * SCALE)
+end
+
+Shared.Connections = Shared.Connections or {}
+if Shared.Connections[key] then
+    for _, c in pairs(Shared.Connections[key]) do
+        if c then pcall(function() c:Disconnect() end) end
+    end
+end
+Shared.Connections[key] = {}
+
+local old = CoreGui:FindFirstChild("SchmecktPurchasePanel")
+if old then old:Destroy() end
+
+local Theme = {
+    Background = Color3.fromRGB(20, 5, 15),
+    Card = Color3.fromRGB(45, 12, 35),
+    Accent = Color3.fromRGB(255, 20, 147),
+    Purple = Color3.fromRGB(180, 50, 255),
+    PurpleLight = Color3.fromRGB(220, 130, 255),
+    Text = Color3.fromRGB(255, 255, 255),
+    SubText = Color3.fromRGB(255, 150, 180),
+    Stroke = Color3.fromRGB(150, 30, 100),
+    Success = Color3.fromRGB(50, 255, 150),
+    Danger = Color3.fromRGB(255, 50, 80),
+}
+
+local LOGO_ASSET = "rbxassetid://121759217057084"
+local LOGO2_ASSET = "rbxassetid://118676632373972"
+
+local items = {
+    {name = "[Tactical Shotgun]", display = "Tactical Shotgun", color = Color3.fromRGB(255, 50, 50)},
+    {name = "[Silencer]", display = "Silencer", color = Color3.fromRGB(255, 50, 50)},
+    {name = "[USP]", display = "USP", color = Color3.fromRGB(255, 50, 50)},
+    {name = "[Bloxy Cola]", display = "Bloxy Cola", color = Color3.fromRGB(50, 255, 100)},
+    {name = "[Pizza]", display = "Pizza", color = Color3.fromRGB(50, 255, 100)},
+    {name = "[Medium Armor]", display = "Medium Armor", color = Color3.fromRGB(100, 150, 255)},
+}
+
+local function getPad(padName)
+    local map = Workspace:FindFirstChild("MAP")
+    if not map then return nil end
+    local pads = map:FindFirstChild("Pads")
+    if not pads then return nil end
+    for _, v in ipairs(pads:GetChildren()) do
+        if v.Name == padName and v:FindFirstChild("ClickDetector") then
+            return v
+        end
+    end
+    for _, v in ipairs(pads:GetChildren()) do
+        if string.find(v.Name, padName:gsub("%[", ""):gsub("%]", "")) and v:FindFirstChild("ClickDetector") then
+            return v
+        end
+    end
+    return nil
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "SchmecktPurchasePanel"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = scaleUDim(250, 310)
+MainFrame.Position = UDim2.new(1, -(250 * SCALE), 0.5, -(410 * SCALE))
+MainFrame.BackgroundColor3 = Theme.Background
+MainFrame.BackgroundTransparency = 0.02
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = gui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14 * SCALE)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Thickness = 2 * SCALE
+MainStroke.Transparency = 0
+MainStroke.Parent = MainFrame
+
+local mainStrokeGrad = Instance.new("UIGradient")
+mainStrokeGrad.Rotation = 90
+mainStrokeGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 20, 147)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 50, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 20, 60))
+})
+mainStrokeGrad.Parent = MainStroke
+
+local HeaderFrame = Instance.new("Frame")
+HeaderFrame.Name = "Header"
+HeaderFrame.Size = UDim2.new(1, 0, 0, 50 * SCALE)
+HeaderFrame.BackgroundColor3 = Theme.Card
+HeaderFrame.BorderSizePixel = 0
+HeaderFrame.Parent = MainFrame
+Instance.new("UICorner", HeaderFrame).CornerRadius = UDim.new(0, 14 * SCALE)
+
+local headerGlow = Instance.new("Frame")
+headerGlow.Size = UDim2.new(1, 0, 1, 0)
+headerGlow.BackgroundColor3 = Theme.Purple
+headerGlow.BackgroundTransparency = 0.88
+headerGlow.BorderSizePixel = 0
+headerGlow.Parent = HeaderFrame
+Instance.new("UICorner", headerGlow).CornerRadius = UDim.new(0, 14 * SCALE)
+
+local HeaderLogo1 = Instance.new("ImageLabel")
+HeaderLogo1.Size = scaleUDim(28, 28)
+HeaderLogo1.Position = UDim2.new(0, 10 * SCALE, 0.5, -(14 * SCALE))
+HeaderLogo1.BackgroundColor3 = Theme.Background
+HeaderLogo1.Image = LOGO_ASSET
+HeaderLogo1.ScaleType = Enum.ScaleType.Crop
+HeaderLogo1.Parent = HeaderFrame
+Instance.new("UICorner", HeaderLogo1).CornerRadius = UDim.new(0, 6 * SCALE)
+
+local HeaderX = Instance.new("TextLabel")
+HeaderX.Size = scaleUDim(14, 28)
+HeaderX.Position = UDim2.new(0, 40 * SCALE, 0.5, -(14 * SCALE))
+HeaderX.BackgroundTransparency = 1
+HeaderX.Text = "X"
+HeaderX.Font = Enum.Font.GothamBlack
+HeaderX.TextSize = scaleSize(10)
+HeaderX.TextColor3 = Theme.Purple
+HeaderX.Parent = HeaderFrame
+
+local HeaderLogo2 = Instance.new("ImageLabel")
+HeaderLogo2.Size = scaleUDim(24, 24)
+HeaderLogo2.Position = UDim2.new(0, 56 * SCALE, 0.5, -(12 * SCALE))
+HeaderLogo2.BackgroundTransparency = 1
+HeaderLogo2.Image = LOGO2_ASSET
+HeaderLogo2.ScaleType = Enum.ScaleType.Fit
+HeaderLogo2.Parent = HeaderFrame
+Instance.new("UICorner", HeaderLogo2).CornerRadius = UDim.new(1, 0)
+
+local HeaderText = Instance.new("TextLabel")
+HeaderText.Size = UDim2.new(1, -(90 * SCALE), 0, 18 * SCALE)
+HeaderText.Position = UDim2.new(0, 88 * SCALE, 0, 8 * SCALE)
+HeaderText.BackgroundTransparency = 1
+HeaderText.Text = "PURCHASE"
+HeaderText.Font = Enum.Font.GothamBlack
+HeaderText.TextSize = scaleSize(11)
+HeaderText.TextColor3 = Theme.Accent
+HeaderText.TextXAlignment = Enum.TextXAlignment.Left
+HeaderText.Parent = HeaderFrame
+
+local headerTextGrad = Instance.new("UIGradient")
+headerTextGrad.Rotation = 0
+headerTextGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 20, 147)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 50, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 105, 180))
+})
+headerTextGrad.Parent = HeaderText
+
+local HeaderSub = Instance.new("TextLabel")
+HeaderSub.Size = UDim2.new(1, -(90 * SCALE), 0, 14 * SCALE)
+HeaderSub.Position = UDim2.new(0, 88 * SCALE, 0, 26 * SCALE)
+HeaderSub.BackgroundTransparency = 1
+HeaderSub.Text = "Meulios X ShadowPepper"
+HeaderSub.Font = Enum.Font.GothamMedium
+HeaderSub.TextSize = scaleSize(9)
+HeaderSub.TextColor3 = Theme.SubText
+HeaderSub.TextXAlignment = Enum.TextXAlignment.Left
+HeaderSub.Parent = HeaderFrame
+
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Name = "Scroll"
+Scroll.Size = UDim2.new(1, -(16 * SCALE), 1, -(66 * SCALE))
+Scroll.Position = UDim2.new(0, 8 * SCALE, 0, 58 * SCALE)
+Scroll.BackgroundTransparency = 1
+Scroll.BorderSizePixel = 0
+Scroll.ScrollBarThickness = 4 * SCALE
+Scroll.ScrollBarImageColor3 = Theme.Purple
+Scroll.ScrollBarImageTransparency = 0.2
+Scroll.Parent = MainFrame
+
+local UIList = Instance.new("UIListLayout")
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+UIList.Padding = UDim.new(0, 6 * SCALE)
+UIList.Parent = Scroll
+
+for _, item in ipairs(items) do
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, 0, 0, 36 * SCALE)
+    Row.BackgroundColor3 = Theme.Card
+    Row.BorderSizePixel = 0
+    Row.Parent = Scroll
+    Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 8 * SCALE)
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Color = Theme.Stroke
+    RowStroke.Thickness = 1.5 * SCALE
+    RowStroke.Transparency = 0.3
+    RowStroke.Parent = Row
+
+    local ColorDot = Instance.new("Frame")
+    ColorDot.Size = scaleUDim(8, 8)
+    ColorDot.Position = UDim2.new(0, 10 * SCALE, 0.5, -(4 * SCALE))
+    ColorDot.BackgroundColor3 = item.color
+    ColorDot.BorderSizePixel = 0
+    ColorDot.Parent = Row
+    Instance.new("UICorner", ColorDot).CornerRadius = UDim.new(1, 0)
+
+    local ItemLabel = Instance.new("TextLabel")
+    ItemLabel.Size = UDim2.new(1, -(90 * SCALE), 1, 0)
+    ItemLabel.Position = UDim2.new(0, 24 * SCALE, 0, 0)
+    ItemLabel.BackgroundTransparency = 1
+    ItemLabel.Text = item.display
+    ItemLabel.Font = Enum.Font.GothamBold
+    ItemLabel.TextSize = scaleSize(11)
+    ItemLabel.TextColor3 = Theme.Text
+    ItemLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ItemLabel.Parent = Row
+
+    local BuyBtn = Instance.new("TextButton")
+    BuyBtn.Size = scaleUDim(50, 24)
+    BuyBtn.Position = UDim2.new(1, -(58 * SCALE), 0.5, -(12 * SCALE))
+    BuyBtn.BackgroundColor3 = Theme.Purple
+    BuyBtn.Text = "BUY"
+    BuyBtn.TextColor3 = Theme.Text
+    BuyBtn.Font = Enum.Font.GothamBlack
+    BuyBtn.TextSize = scaleSize(9)
+    BuyBtn.AutoButtonColor = false
+    BuyBtn.Parent = Row
+    Instance.new("UICorner", BuyBtn).CornerRadius = UDim.new(0, 6 * SCALE)
+
+    local buyGrad = Instance.new("UIGradient")
+    buyGrad.Rotation = 45
+    buyGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 20, 147)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 50, 255))
+    })
+    buyGrad.Parent = BuyBtn
+
+    BuyBtn.MouseButton1Click:Connect(function()
+        local pad = getPad(item.name)
+        if pad and pad:FindFirstChild("ClickDetector") and fireclickdetector then
+            fireclickdetector(pad.ClickDetector)
+            TweenService:Create(BuyBtn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Success}):Play()
+            BuyBtn.Text = "✓"
+            task.wait(0.5)
+            TweenService:Create(BuyBtn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Purple}):Play()
+            BuyBtn.Text = "BUY"
+        else
+            TweenService:Create(BuyBtn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Danger}):Play()
+            BuyBtn.Text = "X"
+            task.wait(0.5)
+            TweenService:Create(BuyBtn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Purple}):Play()
+            BuyBtn.Text = "BUY"
+        end
+    end)
+
+    Row.MouseEnter:Connect(function()
+        TweenService:Create(RowStroke, TweenInfo.new(0.15), {Color = Theme.Purple, Transparency = 0}):Play()
+    end)
+    Row.MouseLeave:Connect(function()
+        TweenService:Create(RowStroke, TweenInfo.new(0.15), {Color = Theme.Stroke, Transparency = 0.3}):Play()
+    end)
+end
+
+Scroll.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + (10 * SCALE))
+UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + (10 * SCALE))
+end)
+
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = scaleUDim(250, 310)}):Play()
+
+local cleanupListener = RunService.RenderStepped:Connect(function()
+    if not Shared.PurchasePanel then
+        if gui then gui:Destroy() end
+        cleanupListener:Disconnect()
+        if Shared.Connections[key] then
+            for _, c in pairs(Shared.Connections[key]) do
+                pcall(function() c:Disconnect() end)
+            end
+            Shared.Connections[key] = {}
+        end
+    end
+end)
+table.insert(Shared.Connections[key], cleanupListener)
