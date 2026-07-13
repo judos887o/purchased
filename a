@@ -7,7 +7,13 @@ local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
 
 local lp = Players.LocalPlayer
-local Shared = getgenv().SchmecktHubPC or {}
+
+-- Globalen Table erstellen/holen und PurchasePanel auf TRUE setzen,
+-- damit das Skript sich nicht sofort selbst zerstört!
+getgenv().SchmecktHubPC = getgenv().SchmecktHubPC or {}
+local Shared = getgenv().SchmecktHubPC
+Shared.PurchasePanel = true 
+
 local key = "PurchasePanel"
 
 local IS_MOBILE = Shared.Platform == "Mobile" or UserInputService.TouchEnabled
@@ -65,24 +71,43 @@ local function strokeUI(inst, color, thickness, transparency)
     local st = Instance.new("UIStroke"); st.Color = color; st.Thickness = thickness or 1; st.Transparency = transparency or 0; st.Parent = inst; return st
 end
 
+-- Hier sind alle Items inklusive der neuen Rüstung
 local items = {
     {name = "[Tactical Shotgun]", display = "Tactical Shotgun", color = COL.DotRed},
     {name = "[Silencer]", display = "Silencer", color = COL.DotRed},
     {name = "[USP]", display = "USP", color = COL.DotRed},
     {name = "[Pizza]", display = "Pizza", color = COL.DotGreen},
+    {name = "[High-Medium Armor]", display = "High-Medium Armor", color = COL.DotBlue}, -- Neu!
     {name = "[Medium Armor]", display = "Medium Armor", color = COL.DotBlue},
 }
 
+-- Suchfunktion für alle Pads (Sonderzeichen-sicher)
 local function getPad(padName)
     local map = Workspace:FindFirstChild("MAP")
     if not map then return nil end
     local pads = map:FindFirstChild("Pads")
     if not pads then return nil end
+    
+    local cleanSearchName = padName:gsub("[%[%]]", "")
+    
     for _, v in ipairs(pads:GetChildren()) do
-        if v.Name == padName and v:FindFirstChild("ClickDetector") then return v end
-    end
-    for _, v in ipairs(pads:GetChildren()) do
-        if string.find(v.Name, padName:gsub("%[", ""):gsub("%]", "")) and v:FindFirstChild("ClickDetector") then return v end
+        if v:FindFirstChild("ClickDetector") then
+            -- 1. Exakter Namensabgleich (z.B. "[Tactical Shotgun]")
+            if v.Name == padName then
+                return v
+            end
+            
+            -- 2. Bereinigter Abgleich (ohne Klammern)
+            local cleanVName = v.Name:gsub("[%[%]]", "")
+            if cleanVName == cleanSearchName then
+                return v
+            end
+            
+            -- 3. Fehlertolerante Textsuche (plain = true)
+            if string.find(v.Name, padName, 1, true) or string.find(cleanVName, cleanSearchName, 1, true) then
+                return v
+            end
+        end
     end
     return nil
 end
